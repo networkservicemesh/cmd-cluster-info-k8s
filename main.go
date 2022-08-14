@@ -45,10 +45,11 @@ import (
 
 // Config represents the configuration for cmd-map-ip-k8s application
 type Config struct {
-	LogLevel              string `default:"INFO" desc:"Log level" split_words:"true"`
-	ConfigmapName         string `default:"cluster-info" desc:"Configmap to write" split_words:"true"`
-	Namespace             string `default:"default" desc:"Namespace where app is deployed" split_words:"true"`
-	OpenTelemetryEndpoint string `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
+	LogLevel              string            `default:"INFO" desc:"Log level" split_words:"true"`
+	ConfigmapName         string            `default:"cluster-info" desc:"Configmap to write" split_words:"true"`
+	Namespace             string            `default:"default" desc:"Namespace where app is deployed" split_words:"true"`
+	OpenTelemetryEndpoint string            `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
+	TranslationMap        map[string]string `default:"id.k8s.io:CLUSTER_NAME" desc:"Replaces cluster property name to another if it's presented the map" split_words:"true"`
 }
 
 func main() {
@@ -152,13 +153,16 @@ func main() {
 			logger.Warnf("got an error during REST call %v", err.Error())
 		}
 
+		var properties = make(map[string]string)
 		for i := 0; i < len(clusterPropertyList.Items); i++ {
 			var property = &clusterPropertyList.Items[i]
-			if property.Name == "id.k8s.io" {
-				updater.ScheduleSoftUpdate(map[string]string{"CLUSTER_NAME": property.Spec.Value})
-				break
+			var k, v = property.Name, property.Spec.Value
+			if translation := conf.TranslationMap[k]; translation != "" {
+				k = translation
 			}
+			properties[k] = v
 		}
+		updater.ScheduleSoftUpdate(properties)
 	}
 
 	// ********************************************************************************
@@ -188,7 +192,9 @@ func (c *configMapUpdater) SoftUpdate(change map[string]string) {
 		c.logger.Errorf("got an error during get configmap: %+v, err: %v", c.configMapMeta, err.Error())
 		return
 	}
-
+	if resp.Data == nil {
+		resp.Data = make(map[string]string)
+	}
 	var hasDiff = false
 	for k, v := range change {
 		if resp.Data[k] != v {
