@@ -10,6 +10,7 @@ import (
 	_ "github.com/networkservicemesh/sdk/pkg/tools/log/logruslogger"
 	_ "github.com/networkservicemesh/sdk/pkg/tools/opentelemetry"
 	_ "github.com/sirupsen/logrus"
+	_ "gopkg.in/yaml.v2"
 	_ "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/apimachinery/pkg/runtime/schema"
 	_ "k8s.io/apimachinery/pkg/runtime/serializer"
