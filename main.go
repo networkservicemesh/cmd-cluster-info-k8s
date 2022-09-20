@@ -26,6 +26,7 @@ import (
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/edwarnicke/serialize"
 	"github.com/kelseyhightower/envconfig"
+	"gopkg.in/yaml.v2"
 
 	"github.com/sirupsen/logrus"
 
@@ -49,7 +50,8 @@ type Config struct {
 	ConfigmapName         string            `default:"cluster-info" desc:"Configmap to write" split_words:"true"`
 	Namespace             string            `default:"default" desc:"Namespace where app is deployed" split_words:"true"`
 	OpenTelemetryEndpoint string            `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
-	TranslationMap        map[string]string `default:"id.k8s.io:CLUSTER_NAME" desc:"Replaces cluster property name to another if it's presented the map" split_words:"true"`
+	TranslationMap        map[string]string `default:"id.k8s.io:clusterName" desc:"Replaces cluster property name to another if it's presented the map" split_words:"true"`
+	FileName              string            `default:"config.yaml" desc:"Name of output data" split_words:"true"`
 }
 
 func main() {
@@ -141,6 +143,7 @@ func main() {
 			Namespace: conf.Namespace,
 			Name:      conf.ConfigmapName,
 		},
+		fileName:  conf.FileName,
 		k8sClient: c,
 		logger:    logger.WithField("cluster-info-k8s", "configMapUpdater"),
 	}
@@ -174,6 +177,7 @@ func main() {
 type configMapUpdater struct {
 	ctx           context.Context
 	configMapMeta metav1.ObjectMeta
+	fileName      string
 	executor      serialize.Executor
 	k8sClient     *kubernetes.Clientset
 	logger        log.Logger
@@ -195,10 +199,13 @@ func (c *configMapUpdater) SoftUpdate(change map[string]string) {
 	if resp.Data == nil {
 		resp.Data = make(map[string]string)
 	}
+	var fileData = resp.Data[c.fileName]
+	var configMapFileValues = make(map[string]string)
+	_ = yaml.Unmarshal([]byte(fileData), &configMapFileValues)
 	var hasDiff = false
 	for k, v := range change {
-		if resp.Data[k] != v {
-			resp.Data[k] = v
+		if configMapFileValues[k] != v {
+			configMapFileValues[k] = v
 			hasDiff = true
 		}
 	}
@@ -206,6 +213,10 @@ func (c *configMapUpdater) SoftUpdate(change map[string]string) {
 	if !hasDiff {
 		return
 	}
+
+	var configMapFileValuesRaw, _ = yaml.Marshal(&configMapFileValues)
+
+	resp.Data[c.fileName] = string(configMapFileValuesRaw)
 
 	_, err = c.k8sClient.CoreV1().ConfigMaps(c.configMapMeta.Namespace).Update(ctx, resp, metav1.UpdateOptions{})
 
