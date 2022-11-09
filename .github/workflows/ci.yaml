@@ -34,8 +34,8 @@ jobs:
   gogenerate:
     uses: networkservicemesh/.github/.github/workflows/cmd-gogenerate.yaml@main
 
- # excludereplace:
- #   uses: networkservicemesh/.github/.github/workflows/exclude-replace.yaml@main
+  # excludereplace:
+  #   uses: networkservicemesh/.github/.github/workflows/exclude-replace.yaml@main
 
   docker-build-and-test:
     if: github.repository != 'networkservicemesh/cmd-template'
