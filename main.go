@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Cisco and/or its affiliates.
+// Copyright (c) 2022-2023 Cisco and/or its affiliates.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -50,6 +50,7 @@ type Config struct {
 	ConfigmapName         string            `default:"cluster-info" desc:"Configmap to write" split_words:"true"`
 	Namespace             string            `default:"default" desc:"Namespace where app is deployed" split_words:"true"`
 	OpenTelemetryEndpoint string            `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
+	MetricsExportInterval time.Duration     `default:"10s" desc:"interval between mertics exports" split_words:"true"`
 	TranslationMap        map[string]string `default:"id.k8s.io:clusterName" desc:"Replaces cluster property name to another if it's presented the map" split_words:"true"`
 	FileName              string            `default:"config.yaml" desc:"Name of output data" split_words:"true"`
 }
@@ -101,7 +102,7 @@ func main() {
 	if opentelemetry.IsEnabled() {
 		collectorAddress := conf.OpenTelemetryEndpoint
 		spanExporter := opentelemetry.InitSpanExporter(ctx, collectorAddress)
-		metricExporter := opentelemetry.InitMetricExporter(ctx, collectorAddress)
+		metricExporter := opentelemetry.InitOPTLMetricExporter(ctx, collectorAddress, conf.MetricsExportInterval)
 		o := opentelemetry.Init(ctx, spanExporter, metricExporter, "map-ip-k8s")
 		defer func() {
 			if err = o.Close(); err != nil {
