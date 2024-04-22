@@ -16,6 +16,18 @@ You can build the docker container by running:
 docker build .
 ```
 
+# Usage
+
+## Environment config
+
+* `NSM_LOG_LEVEL`               - Log level (default: "INFO")
+* `NSM_CONFIGMAP_NAME`          - Configmap to write (default: "cluster-info")
+* `NSM_NAMESPACE`               - Namespace where app is deployed (default: "default")
+* `NSM_OPEN_TELEMETRY_ENDPOINT` - OpenTelemetry Collector Endpoint (default: "otel-collector.observability.svc.cluster.local:4317")
+* `NSM_METRICS_EXPORT_INTERVAL` - interval between mertics exports (default: "10s")
+* `NSM_TRANSLATION_MAP`         - Replaces cluster property name to another if it's presented the map (default: "id.k8s.io:clusterName")
+* `NSM_FILE_NAME`               - Name of output data (default: "config.yaml")
+
 # Testing
 
 ## Testing Docker container
