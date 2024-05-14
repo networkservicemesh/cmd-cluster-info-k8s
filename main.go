@@ -1,5 +1,7 @@
 // Copyright (c) 2022-2023 Cisco and/or its affiliates.
 //
+// Copyright (c) 2024 OpenInfra Foundation Europe. All rights reserved.
+//
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +51,7 @@ type Config struct {
 	LogLevel              string            `default:"INFO" desc:"Log level" split_words:"true"`
 	ConfigmapName         string            `default:"cluster-info" desc:"Configmap to write" split_words:"true"`
 	Namespace             string            `default:"default" desc:"Namespace where app is deployed" split_words:"true"`
-	OpenTelemetryEndpoint string            `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
+	OpenTelemetryEndpoint string            `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint" split_words:"true"`
 	MetricsExportInterval time.Duration     `default:"10s" desc:"interval between mertics exports" split_words:"true"`
 	TranslationMap        map[string]string `default:"id.k8s.io:clusterName" desc:"Replaces cluster property name to another if it's presented the map" split_words:"true"`
 	FileName              string            `default:"config.yaml" desc:"Name of output data" split_words:"true"`
