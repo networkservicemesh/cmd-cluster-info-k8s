@@ -41,6 +41,7 @@ import (
 	"github.com/networkservicemesh/sdk/pkg/tools/log"
 	"github.com/networkservicemesh/sdk/pkg/tools/log/logruslogger"
 	"github.com/networkservicemesh/sdk/pkg/tools/opentelemetry"
+	"github.com/networkservicemesh/sdk/pkg/tools/pprofutils"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	aboutv1alpha1 "k8s.io/clusterproperty/api/v1alpha1"
@@ -55,6 +56,8 @@ type Config struct {
 	MetricsExportInterval time.Duration     `default:"10s" desc:"interval between mertics exports" split_words:"true"`
 	TranslationMap        map[string]string `default:"id.k8s.io:clusterName" desc:"Replaces cluster property name to another if it's presented the map" split_words:"true"`
 	FileName              string            `default:"config.yaml" desc:"Name of output data" split_words:"true"`
+	PprofEnabled          bool              `default:"false" desc:"is pprof enabled" split_words:"true"`
+	PprofListenOn         string            `default:"localhost:6060" desc:"pprof URL to ListenAndServe" split_words:"true"`
 }
 
 func main() {
@@ -111,6 +114,13 @@ func main() {
 				logger.Error(err.Error())
 			}
 		}()
+	}
+
+	// ********************************************************************************
+	// Configure pprof
+	// ********************************************************************************
+	if conf.PprofEnabled {
+		go pprofutils.ListenAndServe(ctx, conf.PprofListenOn)
 	}
 
 	// ********************************************************************************
